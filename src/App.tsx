@@ -28,6 +28,7 @@ function App() {
     updateComponent,
     moveComponentToPosition,
     findComponent,
+    applySidebarContentSticky,
     loadTemplate,
     resetToCustom,
   } = useWebsiteBuilder()
@@ -117,6 +118,7 @@ function App() {
           selectedComponentType={selectedComponent ? selectedComponent.type : null}
           selectedComponentProps={selectedComponent ? selectedComponent.props : {}}
           onUpdateComponent={handleUpdateComponent}
+          onSidebarContentStickyChange={applySidebarContentSticky}
           onDeleteComponent={selectedComponentId ? handleDeleteComponent : undefined}
           showTabSettings={showTabSettings}
           allTabs={websiteData.tabs.map(tab => ({

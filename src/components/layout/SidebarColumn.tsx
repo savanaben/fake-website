@@ -44,6 +44,14 @@ interface SidebarColumnProps {
   className?: string
 }
 
+/** True if value is a positive number string (flex ratio), e.g. "1", "2.5", "4" */
+function isFlexRatio(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  const n = parseFloat(trimmed)
+  return /^\d+(\.\d+)?$/.test(trimmed) && !isNaN(n) && n > 0
+}
+
 export function SidebarColumn({
   width = '200px',
   bgColor,
@@ -58,11 +66,16 @@ export function SidebarColumn({
   onClick,
   className,
 }: SidebarColumnProps) {
+  const effectiveWidth = (width && String(width).trim() !== '') ? width : '200px'
+  const useFlex = isFlexRatio(effectiveWidth)
+  const flexValue = useFlex ? String(effectiveWidth).trim() : undefined
+
   const style: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    width,
-    flexShrink: 0,
+    ...(useFlex
+      ? { flex: `${flexValue} 1 0%`, minWidth: 0 }
+      : { width: effectiveWidth, flexShrink: 0 }),
     alignSelf: 'stretch',
     position: 'relative',
     // Avoid overflow: hidden so sticky children (SidebarContent) can stick correctly

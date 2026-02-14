@@ -472,7 +472,6 @@
                 "id": "sidebar-page-root",
                 "type": "sidebarPage",
                 "props": {
-                  "name": "Sidebar Page",
                   "enabled": true
                 },
                 "children": [
@@ -480,9 +479,8 @@
                     "id": "sidebar-col-left",
                     "type": "sidebarColumn",
                     "props": {
-                      "sidebarColumnWidth": "200px",
+                      "sidebarColumnWidth": "1",
                       "sidebarColumnBgColor": "#e8f0fe",
-                      "name": "Left Sidebar",
                       "enabled": true
                     },
                     "children": [
@@ -493,7 +491,26 @@
                           "sidebarContentBgColor": "#c2d9f7",
                           "sidebarContentHeight": "grow",
                           "sidebarContentVerticalAlign": "start",
-                          "name": "Left Content",
+                          "enabled": true
+                        }
+                      },
+                      {
+                        "id": "sidebar-content-left-2",
+                        "type": "sidebarContent",
+                        "props": {
+                          "sidebarContentBgColor": "#a8c8f0",
+                          "sidebarContentHeight": "grow",
+                          "sidebarContentVerticalAlign": "start",
+                          "enabled": true
+                        }
+                      },
+                      {
+                        "id": "sidebar-content-left-3",
+                        "type": "sidebarContent",
+                        "props": {
+                          "sidebarContentBgColor": "#8eb8e8",
+                          "sidebarContentHeight": "grow",
+                          "sidebarContentVerticalAlign": "start",
                           "enabled": true
                         }
                       }
@@ -506,8 +523,8 @@
                       "gap": "gap-4",
                       "flexDirection": "column",
                       "flexContainerMaxWidth": "full",
+                      "flexContainerFlex": 2.5,
                       "columnDistribution": "1",
-                      "name": "Passage Area",
                       "enabled": true
                     },
                     "children": [
@@ -517,7 +534,6 @@
                         "props": {
                           "columnMaxWidth": "full",
                           "columnHasPadding": true,
-                          "name": "Passage Column",
                           "enabled": true
                         },
                         "children": [
@@ -545,6 +561,22 @@
                               "content": "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.",
                               "enabled": true
                             }
+                          },
+                                                    {
+                            "id": "passage-para-3",
+                            "type": "paragraph",
+                            "props": {
+                              "content": "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.",
+                              "enabled": true
+                            }
+                          },
+                                                    {
+                            "id": "passage-para-4",
+                            "type": "paragraph",
+                            "props": {
+                              "content": "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.",
+                              "enabled": true
+                            }
                           }
                         ]
                       }
@@ -554,9 +586,8 @@
                     "id": "sidebar-col-right",
                     "type": "sidebarColumn",
                     "props": {
-                      "sidebarColumnWidth": "200px",
+                      "sidebarColumnWidth": "1",
                       "sidebarColumnBgColor": "#fef3e8",
-                      "name": "Right Sidebar",
                       "enabled": true
                     },
                     "children": [
@@ -567,7 +598,26 @@
                           "sidebarContentBgColor": "#fde0c2",
                           "sidebarContentHeight": "grow",
                           "sidebarContentVerticalAlign": "start",
-                          "name": "Right Content",
+                          "enabled": true
+                        }
+                      },
+                      {
+                        "id": "sidebar-content-right-2",
+                        "type": "sidebarContent",
+                        "props": {
+                          "sidebarContentBgColor": "#fcd4a8",
+                          "sidebarContentHeight": "grow",
+                          "sidebarContentVerticalAlign": "start",
+                          "enabled": true
+                        }
+                      },
+                      {
+                        "id": "sidebar-content-right-3",
+                        "type": "sidebarContent",
+                        "props": {
+                          "sidebarContentBgColor": "#fbc88e",
+                          "sidebarContentHeight": "grow",
+                          "sidebarContentVerticalAlign": "start",
                           "enabled": true
                         }
                       }

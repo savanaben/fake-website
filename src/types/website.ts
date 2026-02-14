@@ -58,6 +58,7 @@ export interface ComponentProps {
   gap?: string
   flexDirection?: 'row' | 'column' // row = columns side-by-side, column = columns stacked
   flexContainerMaxWidth?: 'default' | 'full' // default = max 900px centered, full = 100% width
+  flexContainerFlex?: number // when inside SidebarPage, flex ratio (e.g. 4 for 1:4:1 layout)
   columnDistribution?: string // e.g., "1:1", "1:2", "2:1", "1:1:1", "1:2:1"
   columnWidth?: string // Legacy/override for individual columns
   columnMaxWidth?: 'default' | 'full' // default = max 900px, full = fill available area
@@ -80,7 +81,7 @@ export interface ComponentProps {
   headerBarSticky?: boolean // Whether the header bar should be sticky
   
   // SidebarColumn props
-  sidebarColumnWidth?: string // e.g. "200px", "300px", "25%"
+  sidebarColumnWidth?: string // flex ratio "1", "2", "3" or fixed "200px", "25%"
   sidebarColumnBgColor?: string // background color
   sidebarColumnBgImage?: string // background image URL
   sidebarColumnBgImageRepeat?: 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y'

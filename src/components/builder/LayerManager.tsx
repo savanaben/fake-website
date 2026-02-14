@@ -14,6 +14,7 @@ interface LayerManagerProps {
   selectedComponentType: ComponentType | null
   selectedComponentProps: ComponentProps
   onUpdateComponent: (props: Partial<ComponentProps>) => void
+  onSidebarContentStickyChange?: (componentId: string, sticky: boolean, edge?: 'top' | 'bottom') => void
   onDeleteComponent?: () => void
   // Tab configuration
   showTabSettings?: boolean
@@ -341,6 +342,7 @@ export function LayerManager({
   selectedComponentType,
   selectedComponentProps,
   onUpdateComponent,
+  onSidebarContentStickyChange,
   onDeleteComponent,
   showTabSettings,
   allTabs,
@@ -412,7 +414,9 @@ export function LayerManager({
           <ConfigurationPanel
             componentType={selectedComponentType}
             props={selectedComponentProps}
+            selectedComponentId={selectedComponentId}
             onUpdate={onUpdateComponent}
+            onSidebarContentStickyChange={onSidebarContentStickyChange}
             onDelete={onDeleteComponent}
             showTabSettings={showTabSettings}
             allTabs={allTabs}

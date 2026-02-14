@@ -12,6 +12,12 @@ const CARD_PADDING_OPTIONS = ['space-16', 'space-24', 'space-32', 'space-48'] as
 
 const DEFAULT_CARD_BORDER_COLOR = '#909090'
 
+/** Transparent swatch: white bg with red diagonal slash (corner to corner) */
+const TRANSPARENT_SWATCH_STYLE: React.CSSProperties = {
+  backgroundColor: '#ffffff',
+  backgroundImage: 'linear-gradient(135deg, transparent 42%, #dc2626 42%, #dc2626 58%, transparent 58%)',
+}
+
 const OVER_BACKGROUND_PRESET: Partial<ComponentProps> = {
   cardRounding: 'large',
   cardShadow: 'high',
@@ -74,7 +80,9 @@ interface TabData {
 interface ConfigurationPanelProps {
   componentType: ComponentType | null
   props: ComponentProps
+  selectedComponentId?: string | null
   onUpdate: (props: Partial<ComponentProps>) => void
+  onSidebarContentStickyChange?: (componentId: string, sticky: boolean, edge?: 'top' | 'bottom') => void
   onDelete?: () => void
   // Tab configuration - show all tabs
   showTabSettings?: boolean
@@ -92,7 +100,9 @@ interface ConfigurationPanelProps {
 export function ConfigurationPanel({
   componentType,
   props,
+  selectedComponentId,
   onUpdate,
+  onSidebarContentStickyChange,
   onDelete,
   showTabSettings,
   allTabs,
@@ -558,6 +568,30 @@ export function ConfigurationPanel({
                 Define column widths using ratios (e.g., "1:1" for equal, "1:2" for 1/3 and 2/3, "2:1:1" for three columns)
               </p>
             </div>
+            <div>
+              <Label htmlFor="flexContainerFlex">Flex ratio (sidebar layout)</Label>
+              <Input
+                id="flexContainerFlex"
+                type="number"
+                min={0.1}
+                max={24}
+                step="any"
+                value={props.flexContainerFlex ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value.trim()
+                  if (v === '') {
+                    onUpdate({ flexContainerFlex: undefined })
+                    return
+                  }
+                  const n = parseFloat(v)
+                  if (!isNaN(n) && n >= 0.1 && n <= 24) onUpdate({ flexContainerFlex: n })
+                }}
+                placeholder="e.g. 4 or 2.5"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                When this container is the passage area inside a SidebarPage, use this as its flex ratio (e.g. 4 or 2.5 for 1:4:1 with sidebars set to 1).
+              </p>
+            </div>
           </>
         )}
 
@@ -651,10 +685,10 @@ export function ConfigurationPanel({
                 <p className="text-xs font-medium text-gray-600">Core Colors</p>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { label: 'White', value: '#ffffff', borderColor: DEFAULT_CARD_BORDER_COLOR },
-                    { label: 'Blue', value: '#e0f2f1', borderColor: '#80CBC4' },
-                    { label: 'Yellow', value: '#ffecb3', borderColor: '#FFB300' },
                     { label: 'Transparent', value: 'transparent', borderColor: DEFAULT_CARD_BORDER_COLOR },
+                    { label: 'White', value: '#ffffff', borderColor: DEFAULT_CARD_BORDER_COLOR },
+                    { label: 'Sky', value: NAEP_LIGHT_BACKGROUNDS.Sky, borderColor: NAEP_BORDER_COLORS.Sky },
+                    { label: 'Orange', value: NAEP_LIGHT_BACKGROUNDS.Orange, borderColor: NAEP_BORDER_COLORS.Orange },
                   ].map(({ label, value, borderColor }) => {
                     const isSelected = (props.cardBackgroundColor || '#ffffff') === value
                     return (
@@ -669,10 +703,7 @@ export function ConfigurationPanel({
                             : 'border-gray-300 hover:border-gray-500'
                         }`}
                         style={{
-                          backgroundColor: value === 'transparent' ? 'transparent' : value,
-                          backgroundImage: value === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)' : undefined,
-                          backgroundSize: value === 'transparent' ? '4px 4px' : undefined,
-                          backgroundPosition: value === 'transparent' ? '0 0, 0 2px, 2px -2px, -2px 0' : undefined,
+                          ...(value === 'transparent' ? TRANSPARENT_SWATCH_STYLE : { backgroundColor: value }),
                           ...(isSelected ? { borderColor, boxShadow: `0 0 0 2px ${borderColor}` } : {}),
                         }}
                       />
@@ -1007,36 +1038,46 @@ export function ConfigurationPanel({
         {componentType === 'sidebarColumn' && (
           <>
             <div>
-              <Label htmlFor="sidebarColumnWidth">Width</Label>
+              <Label htmlFor="sidebarColumnWidth">Sidebar Width</Label>
               <Input
                 id="sidebarColumnWidth"
-                value={props.sidebarColumnWidth || '200px'}
-                onChange={(e) => onUpdate({ sidebarColumnWidth: e.target.value })}
-                placeholder="200px"
+                value={props.sidebarColumnWidth ?? ''}
+                onChange={(e) => onUpdate({ sidebarColumnWidth: e.target.value || undefined })}
+                placeholder="e.g. 1, 2.5, 200px, 25%"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Fixed width (e.g., "200px", "300px", "25%")
+                Flex ratio (e.g., 1, 2.5, 4) or fixed width (e.g., 200px, 25%). Use flex for 1:4:1-style layouts with the passage.
               </p>
             </div>
             <div>
-              <Label htmlFor="sidebarColumnBgColor">Background Color</Label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  id="sidebarColumnBgColorPicker"
-                  value={props.sidebarColumnBgColor && /^#[0-9A-Fa-f]{6}$/.test(props.sidebarColumnBgColor)
-                    ? props.sidebarColumnBgColor
-                    : '#ffffff'}
-                  onChange={(e) => onUpdate({ sidebarColumnBgColor: e.target.value })}
-                  className="h-10 w-16 cursor-pointer border border-gray-300 rounded"
-                />
-                <Input
-                  id="sidebarColumnBgColor"
-                  value={props.sidebarColumnBgColor || ''}
-                  onChange={(e) => onUpdate({ sidebarColumnBgColor: e.target.value })}
-                  placeholder="#f0f0f0 or transparent"
-                  className="flex-1"
-                />
+              <Label>Background Color</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {[
+                  { label: 'White', value: '#ffffff', borderColor: DEFAULT_CARD_BORDER_COLOR },
+                  { label: 'Transparent', value: 'transparent', borderColor: DEFAULT_CARD_BORDER_COLOR },
+                  ...Object.entries(NAEP_LIGHT_BACKGROUNDS).map(([name, hex]) => ({
+                    label: name,
+                    value: hex,
+                    borderColor: NAEP_BORDER_COLORS[name] ?? DEFAULT_CARD_BORDER_COLOR,
+                  })),
+                ].map(({ label, value, borderColor }) => {
+                  const isSelected = (props.sidebarColumnBgColor || '') === value
+                  return (
+                    <button
+                      key={value === 'transparent' ? 'transparent' : value}
+                      type="button"
+                      title={label}
+                      onClick={() => onUpdate({ sidebarColumnBgColor: value })}
+                      className={`w-6 h-6 rounded border-2 ${
+                        isSelected ? 'ring-2' : 'border-gray-300 hover:border-gray-500'
+                      }`}
+                      style={{
+                        ...(value === 'transparent' ? TRANSPARENT_SWATCH_STYLE : { backgroundColor: value }),
+                        ...(isSelected ? { borderColor: borderColor, boxShadow: `0 0 0 2px ${borderColor}` } : {}),
+                      }}
+                    />
+                  )
+                })}
               </div>
             </div>
             <div>
@@ -1074,7 +1115,7 @@ export function ConfigurationPanel({
                   >
                     <option value="cover">Cover (fill proportionally)</option>
                     <option value="contain">Contain (fit within)</option>
-                    <option value="auto">Auto (natural size)</option>
+                    <option value="auto">Auto (intrinsic size)</option>
                     <option value="stretch">Stretch (scales to full column height)</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
@@ -1118,29 +1159,39 @@ export function ConfigurationPanel({
         {componentType === 'sidebarContent' && (
           <>
             <div>
-              <Label htmlFor="sidebarContentBgColor">Background Color</Label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  id="sidebarContentBgColorPicker"
-                  value={props.sidebarContentBgColor && /^#[0-9A-Fa-f]{6}$/.test(props.sidebarContentBgColor)
-                    ? props.sidebarContentBgColor
-                    : '#ffffff'}
-                  onChange={(e) => onUpdate({ sidebarContentBgColor: e.target.value })}
-                  className="h-10 w-16 cursor-pointer border border-gray-300 rounded"
-                />
-                <Input
-                  id="sidebarContentBgColor"
-                  value={props.sidebarContentBgColor || ''}
-                  onChange={(e) => onUpdate({ sidebarContentBgColor: e.target.value })}
-                  placeholder="#f0f0f0 or transparent"
-                  className="flex-1"
-                />
+              <Label>Background Color</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {[
+                  { label: 'White', value: '#ffffff', borderColor: DEFAULT_CARD_BORDER_COLOR },
+                  { label: 'Transparent', value: 'transparent', borderColor: DEFAULT_CARD_BORDER_COLOR },
+                  ...Object.entries(NAEP_LIGHT_BACKGROUNDS).map(([name, hex]) => ({
+                    label: name,
+                    value: hex,
+                    borderColor: NAEP_BORDER_COLORS[name] ?? DEFAULT_CARD_BORDER_COLOR,
+                  })),
+                ].map(({ label, value, borderColor }) => {
+                  const isSelected = (props.sidebarContentBgColor || '') === value
+                  return (
+                    <button
+                      key={value === 'transparent' ? 'transparent' : value}
+                      type="button"
+                      title={label}
+                      onClick={() => onUpdate({ sidebarContentBgColor: value })}
+                      className={`w-6 h-6 rounded border-2 ${
+                        isSelected ? 'ring-2' : 'border-gray-300 hover:border-gray-500'
+                      }`}
+                      style={{
+                        ...(value === 'transparent' ? TRANSPARENT_SWATCH_STYLE : { backgroundColor: value }),
+                        ...(isSelected ? { borderColor: borderColor, boxShadow: `0 0 0 2px ${borderColor}` } : {}),
+                      }}
+                    />
+                  )
+                })}
               </div>
             </div>
             <div>
               <Label>Vertical Alignment in Parent</Label>
-              <div className="flex rounded-md border border-gray-300 overflow-hidden mt-1">
+              <div className="flex flex-col rounded-md border border-gray-300 overflow-hidden mt-1 w-fit">
                 {([
                   { value: 'start' as const, label: 'Top' },
                   { value: 'center' as const, label: 'Center' },
@@ -1150,7 +1201,7 @@ export function ConfigurationPanel({
                     key={value}
                     type="button"
                     onClick={() => onUpdate({ sidebarContentVerticalAlign: value })}
-                    className={`flex-1 min-w-0 px-3 py-1.5 text-sm border-r border-gray-300 last:border-r-0 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset ${
+                    className={`w-full px-3 py-1.5 text-sm border-b border-gray-300 last:border-b-0 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset text-left ${
                       (props.sidebarContentVerticalAlign || 'start') === value
                         ? 'bg-blue-600 text-white'
                         : 'bg-white hover:bg-gray-50'
@@ -1199,7 +1250,7 @@ export function ConfigurationPanel({
                   >
                     <option value="cover">Cover (fill proportionally)</option>
                     <option value="contain">Contain (fit within)</option>
-                    <option value="auto">Auto (natural size)</option>
+                    <option value="auto">Auto (intrinsic size)</option>
                     <option value="stretch">Stretch (scales to container)</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
@@ -1272,42 +1323,55 @@ export function ConfigurationPanel({
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="sidebarContentSticky"
-                checked={props.sidebarContentSticky === true}
-                onChange={(e) => onUpdate({ sidebarContentSticky: e.target.checked })}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="sidebarContentSticky" className="cursor-pointer">
-                Sticky
-              </Label>
-            </div>
-            {props.sidebarContentSticky && (
-              <div>
-                <Label>Stick To</Label>
-                <div className="flex rounded-md border border-gray-300 overflow-hidden mt-1">
-                  {([
-                    { value: 'top' as const, label: 'Top' },
-                    { value: 'bottom' as const, label: 'Bottom' },
-                  ]).map(({ value, label }) => (
+            <div>
+              <Label>Stick To</Label>
+              <p className="text-xs text-gray-500 mt-0.5 mb-1">
+                SidebarContent must have Height set to Fixed to sticky.
+              </p>
+              <p className="text-xs text-gray-500 mb-1">
+                Only one SidebarContent per SidebarColumn can stick to Top, and one to Bottom. Stickying to Top/Bottom may reorder SidebarContent's in the Outline. 
+              </p>
+              <div className="flex rounded-md border border-gray-300 overflow-hidden mt-1">
+                {([
+                  { value: 'none' as const, label: 'None', sticky: false, edge: undefined },
+                  { value: 'top' as const, label: 'Top', sticky: true, edge: 'top' as const },
+                  { value: 'bottom' as const, label: 'Bottom', sticky: true, edge: 'bottom' as const },
+                ]).map(({ value, label, sticky: stickyOn, edge }) => {
+                  const isFixedHeight = (props.sidebarContentHeight || 'grow') !== 'grow'
+                  const isSelected =
+                    value === 'none'
+                      ? !props.sidebarContentSticky
+                      : props.sidebarContentSticky && (props.sidebarContentStickyEdge || 'top') === edge
+                  const isDisabled = value !== 'none' && !isFixedHeight
+                  return (
                     <button
                       key={value}
                       type="button"
-                      onClick={() => onUpdate({ sidebarContentStickyEdge: value })}
-                      className={`flex-1 min-w-0 px-3 py-1.5 text-sm border-r border-gray-300 last:border-r-0 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset ${
-                        (props.sidebarContentStickyEdge || 'top') === value
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white hover:bg-gray-50'
+                      disabled={isDisabled}
+                      onClick={() => {
+                        if (value === 'none') {
+                          onUpdate({ sidebarContentSticky: false })
+                          return
+                        }
+                        if (onSidebarContentStickyChange && selectedComponentId && edge) {
+                          onSidebarContentStickyChange(selectedComponentId, true, edge)
+                        } else {
+                          onUpdate({
+                            sidebarContentSticky: stickyOn,
+                            ...(stickyOn && edge ? { sidebarContentStickyEdge: edge } : {}),
+                          })
+                        }
+                      }}
+                      className={`flex-1 min-w-0 px-3 py-1.5 text-sm border-r border-gray-300 last:border-r-0 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset disabled:opacity-50 disabled:pointer-events-none ${
+                        isSelected ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50'
                       }`}
                     >
                       {label}
                     </button>
-                  ))}
-                </div>
+                  )
+                })}
               </div>
-            )}
+            </div>
           </>
         )}
 

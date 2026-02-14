@@ -188,10 +188,16 @@ export function renderComponent({
       
       // Get distribution for columns
       const distribution = component.props.columnDistribution
-      
+      const flexRatio = component.props.flexContainerFlex
+      const wrapperFlexStyle =
+        flexRatio != null && flexRatio > 0
+          ? { flex: `${flexRatio} 1 0%`, minWidth: 0 }
+          : {}
+
       return (
         <div 
           {...commonProps}
+          style={{ ...commonProps.style, ...wrapperFlexStyle }}
           key={`flex-${component.id}-${distribution || 'default'}`}
         >
           <FlexContainer 

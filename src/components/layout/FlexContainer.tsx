@@ -25,7 +25,7 @@ export function FlexContainer({
   onDrop,
 }: FlexContainerProps) {
   const hasChildren = React.Children.count(children) > 0
-  
+
   return (
     <div 
       className={cn(

@@ -433,14 +433,12 @@ export function useWebsiteBuilder() {
       if (!activeTab) return prev
 
       // Find current position
-      let currentParentId: string | null = null
       let currentIndex = -1
       let currentParentChildren: WebsiteComponent[] | null = null
 
-      const findCurrentPosition = (components: WebsiteComponent[], parentId: string | null = null): boolean => {
+      const findCurrentPosition = (components: WebsiteComponent[], _parentId: string | null = null): boolean => {
         for (let i = 0; i < components.length; i++) {
           if (components[i].id === componentId) {
-            currentParentId = parentId
             currentIndex = i
             currentParentChildren = components
             return true
@@ -474,11 +472,9 @@ export function useWebsiteBuilder() {
 
       let newContent = removeFromTree(activeTab.content)
 
-      // Adjust target index if moving within same parent and removing before target
-      let adjustedTargetIndex = targetIndex
-      if (currentParentId === targetParentId && currentIndex < targetIndex) {
-        adjustedTargetIndex = targetIndex - 1
-      }
+      // When moving within same parent, the array we insert into already has the component removed,
+      // so we use targetIndex as-is (e.g. siblings.length - 1 for "last" inserts at the end).
+      const adjustedTargetIndex = targetIndex
 
       // Insert at target position
       const insertAtPosition = (components: WebsiteComponent[]): WebsiteComponent[] => {
@@ -609,6 +605,55 @@ export function useWebsiteBuilder() {
     return findInTree(activeTab.content)
   }, [websiteData])
 
+  /** Find a component's parent id, siblings array, and index within parent (for active tab content only). */
+  const findParentAndSiblings = useCallback((componentId: string): { parentId: string | null; siblings: WebsiteComponent[]; indexInParent: number } | null => {
+    const activeTab = websiteData.tabs.find((tab) => tab.id === websiteData.activeTabId)
+    if (!activeTab) return null
+
+    type Result = { parentId: string | null; siblings: WebsiteComponent[]; indexInParent: number } | null
+    const search = (components: WebsiteComponent[], parentId: string | null): Result => {
+      for (let i = 0; i < components.length; i++) {
+        if (components[i].id === componentId) {
+          return { parentId, siblings: components, indexInParent: i }
+        }
+        if (components[i].children) {
+          const result = search(components[i].children!, components[i].id)
+          if (result) return result
+        }
+      }
+      return null
+    }
+    return search(activeTab.content, null)
+  }, [websiteData])
+
+  const applySidebarContentSticky = useCallback((componentId: string, sticky: boolean, edge?: 'top' | 'bottom') => {
+    if (!sticky) {
+      updateComponent(componentId, { sidebarContentSticky: false })
+      return
+    }
+    if (edge !== 'top' && edge !== 'bottom') return
+
+    const result = findParentAndSiblings(componentId)
+    if (!result) {
+      updateComponent(componentId, { sidebarContentSticky: true, sidebarContentStickyEdge: edge })
+      return
+    }
+    const { parentId, siblings } = result
+    const parent = parentId ? findComponent(parentId) : null
+    if (parent?.type !== 'sidebarColumn' || siblings.length === 0) {
+      updateComponent(componentId, { sidebarContentSticky: true, sidebarContentStickyEdge: edge })
+      return
+    }
+
+    for (const sibling of siblings) {
+      if (sibling.type === 'sidebarContent' && sibling.id !== componentId && sibling.props.sidebarContentSticky === true && sibling.props.sidebarContentStickyEdge === edge) {
+        updateComponent(sibling.id, { sidebarContentSticky: false })
+      }
+    }
+    moveComponentToPosition(componentId, parentId!, edge === 'top' ? 0 : siblings.length - 1)
+    updateComponent(componentId, { sidebarContentSticky: true, sidebarContentStickyEdge: edge })
+  }, [findParentAndSiblings, findComponent, updateComponent, moveComponentToPosition])
+
   const loadTemplate = useCallback((template: WebsiteData) => {
     // Normalize positions for tabs (ensure all tabs have valid positions)
     const normalizedTabs = template.tabs.map((tab, index) => ({
@@ -687,6 +732,7 @@ export function useWebsiteBuilder() {
     moveComponent,
     moveComponentToPosition,
     findComponent,
+    applySidebarContentSticky,
     loadTemplate,
     resetToCustom,
   }

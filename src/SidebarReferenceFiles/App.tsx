@@ -1,7 +1,7 @@
 import React from 'react';
-import SidebarImageContainer from './components/SidebarImageContainer';
-import SidebarImage from './components/SidebarImage';
-import Passage from './components/Passage';
+import SidebarImageContainer from './SidebarImageContainer';
+import SidebarImage from './SidebarImage';
+import Passage from './Passage';
 
 const SectionHeader = ({ title, description }: { title: string; description: string }) => (
   <div className="bg-white p-6">

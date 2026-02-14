@@ -96,12 +96,13 @@ export function SidebarContent({
       : { position: 'relative' as const }),
   }
 
+  // Image layer always fills the container; only the container's height is set (e.g. 50%).
+  // We do not pass height to the image layer so percent values don't make the image a fraction of the container.
   const imageLayerStyle: React.CSSProperties = image
     ? {
-        flex: isGrow ? '1 1 0%' : '0 0 auto',
+        flex: '1 1 0%',
         minHeight: 0,
         width: '100%',
-        ...(isGrow ? {} : { height }),
         backgroundImage: `url(${image})`,
         backgroundRepeat: imageRepeat,
         backgroundSize: mapBgSize(imageSize),
