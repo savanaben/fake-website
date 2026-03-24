@@ -9,7 +9,7 @@ export function FillerTabBar() {
   ]
 
   return (
-    <div className="relative h-[64px] w-full sticky top-[60px] z-10" style={{ paddingTop: '8px', paddingLeft: '8px', paddingRight: '8px', backgroundColor: 'rgb(228, 228, 228)' }}>
+    <div className="relative h-[64px] w-full sticky top-[60px] z-20" style={{ paddingTop: '8px', paddingLeft: '8px', paddingRight: '8px', backgroundColor: 'rgb(228, 228, 228)' }}>
       <div className="flex items-end" style={{ height: '100%' }}>
         {tabs.map((tab, index) => {
         const isLast = index === tabs.length - 1

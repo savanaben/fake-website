@@ -109,7 +109,7 @@ export function TabComponent({ tabs, activeTabId, onTabChange, className, style 
   // Line style (default)
   return (
     <div className={cn('w-full', className)}>
-      <div className={cn('flex border-b border-[#afafaf]', stickyClasses)} style={{ minHeight: '55px', ...stickyWrapperStyle }}>
+      <div className={cn('relative z-10 flex border-b border-[#afafaf] shadow-[0_2px_0_0_white]', stickyClasses)} style={{ minHeight: '55px', ...stickyWrapperStyle }}>
         {iconUrl && (
           <div className="flex items-center self-stretch" style={{ paddingTop: '12px', paddingBottom: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
             <IconImage iconUrl={iconUrl} iconAlt={iconAlt || 'Tab icon'} />
@@ -136,7 +136,7 @@ export function TabComponent({ tabs, activeTabId, onTabChange, className, style 
                   !isEnabled && 'cursor-not-allowed',
                   isActive && isEnabled && 'cursor-default',
                   isEnabled && 'font-bold',
-                  isActive && isEnabled && 'border-b-4'
+                  isActive && isEnabled && 'border-b-[5px]'
                 )}
                 style={{
                   paddingLeft: '16px',
