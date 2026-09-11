@@ -226,6 +226,11 @@ export function BuilderCanvas({
   return (
     <div
       className="flex-1 overflow-auto bg-gray-100 min-h-0"
+      // Size query container: lets sticky SidebarContent use container query units
+      // (`Ncqh`) so a percent height means "percent of the visible scroll area", not of
+      // the full column. This element gets its size from flex in both axes, so the size
+      // containment implied by container-type: size is safe here.
+      style={{ containerType: 'size' }}
       onDragOver={(e) => onDragOver(e)}
       onDrop={handleDrop}
     >

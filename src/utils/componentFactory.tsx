@@ -14,6 +14,7 @@ import { FakeURLBar } from '@/components/layout/FakeURLBar'
 import { SidebarPage } from '@/components/layout/SidebarPage'
 import { SidebarColumn } from '@/components/layout/SidebarColumn'
 import { SidebarContent } from '@/components/layout/SidebarContent'
+import { computeSidebarFlowHints, isEffectivelySticky } from '@/components/layout/sidebarLayout'
 
 interface RenderComponentProps {
   component: WebsiteComponent
@@ -412,6 +413,15 @@ export function renderComponent({
           onDrop(e, componentType, component.id)
         }
       }
+      // Split children into flow (non-sticky) and sticky. Sticky items render in an overlay
+      // layer so they don't reserve space; alignment margins are computed over flow items
+      // only, so groups pack correctly (one auto margin per zone boundary).
+      const colChildren = (component.children || []).filter((c) => c.props.enabled !== false)
+      const stickyChildren = colChildren.filter((c) => c.type === 'sidebarContent' && isEffectivelySticky(c.props))
+      const flowChildren = colChildren.filter((c) => !stickyChildren.includes(c))
+      const flowHints = computeSidebarFlowHints(
+        flowChildren.map((c) => ({ id: c.id, verticalAlign: c.props.sidebarContentVerticalAlign }))
+      )
       return (
         <SidebarColumn
           width={component.props.sidebarColumnWidth}
@@ -421,14 +431,14 @@ export function renderComponent({
           bgImageSize={component.props.sidebarColumnBgImageSize}
           bgImagePosition={component.props.sidebarColumnBgImagePosition}
           isEmpty={!component.children || component.children.length === 0}
+          flowHints={flowHints}
+          stickyChildren={stickyChildren.length > 0 && renderChildren ? renderChildren(stickyChildren) : null}
           onDragOver={handleSidebarColDragOver}
           onDrop={handleSidebarColDrop}
           onClick={commonProps.onClick}
           className={commonProps.className}
         >
-          {component.children && renderChildren
-            ? renderChildren(component.children)
-            : null}
+          {flowChildren.length > 0 && renderChildren ? renderChildren(flowChildren) : null}
         </SidebarColumn>
       )
     }
@@ -436,6 +446,7 @@ export function renderComponent({
     case 'sidebarContent':
       return (
         <SidebarContent
+          id={component.id}
           bgColor={component.props.sidebarContentBgColor}
           verticalAlign={component.props.sidebarContentVerticalAlign}
           image={component.props.sidebarContentImage}
@@ -443,10 +454,11 @@ export function renderComponent({
           imageRepeat={component.props.sidebarContentImageRepeat}
           imageSize={component.props.sidebarContentImageSize}
           height={component.props.sidebarContentHeight}
-          sticky={component.props.sidebarContentSticky}
+          sticky={isEffectivelySticky(component.props)}
           stickyEdge={component.props.sidebarContentStickyEdge}
           onClick={commonProps.onClick}
           className={commonProps.className}
+          style={commonProps.style}
         />
       )
 

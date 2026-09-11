@@ -1212,7 +1212,10 @@ export function ConfigurationPanel({
                 ))}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Positions this container within the parent SidebarColumn.
+                Positions this container within the parent SidebarColumn. Items with the same alignment stack together (Top items at the top, Bottom items at the bottom).
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Has no effect while any non-sticky SidebarContent in this column is set to Grow / Fill, since that item takes all free space. Ignored for sticky items.
               </p>
             </div>
             <div>
@@ -1319,6 +1322,9 @@ export function ConfigurationPanel({
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Fixed height value (e.g., "200px", "50%")
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Percent is of the SidebarColumn height. For sticky items, percent is of the visible (scrollable) area instead, so 100% fills the screen area and resizes with it.
                   </p>
                 </div>
               )}

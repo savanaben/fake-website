@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useContext } from 'react'
+import { SidebarLayoutContext } from './sidebarLayout'
 
 type Position9 = 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
@@ -30,20 +31,33 @@ function mapBgSize(size?: 'cover' | 'contain' | 'auto' | 'stretch'): string {
 }
 
 interface SidebarContentProps {
+  /** Component id; used to look up sibling-aware alignment margins from SidebarColumn. */
+  id?: string
   bgColor?: string
+  /**
+   * Requested vertical zone (Top / Center / Bottom). The actual auto margins are computed
+   * per column by computeSidebarFlowHints so that groups pack correctly; this prop is
+   * exposed as a data attribute for debugging / CSS hooks.
+   */
   verticalAlign?: 'start' | 'center' | 'end'
   image?: string
   imagePosition?: Position9
   imageRepeat?: 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y'
   imageSize?: 'cover' | 'contain' | 'auto' | 'stretch'
   height?: 'grow' | string // 'grow' = flex:1, or fixed value like "200px"
+  /**
+   * Sticky items are rendered by SidebarColumn inside an overlay layer, so they do not
+   * take up space in the flow. Requires a fixed height (see isEffectivelySticky).
+   */
   sticky?: boolean
   stickyEdge?: 'top' | 'bottom'
   onClick?: (e: React.MouseEvent) => void
   className?: string
+  style?: React.CSSProperties
 }
 
 export function SidebarContent({
+  id,
   bgColor,
   verticalAlign = 'start',
   image,
@@ -55,26 +69,34 @@ export function SidebarContent({
   stickyEdge = 'top',
   onClick,
   className,
+  style: styleOverride,
 }: SidebarContentProps) {
   const isGrow = height === 'grow'
+  const flowHints = useContext(SidebarLayoutContext)
+  const alignHint = (!sticky && id && flowHints[id]) || {}
 
-  // When sticky + grow + image, the flex child has minHeight: 0 so the sticky container would collapse to 0. Give it a min height so the image is visible.
-  const needsStickyMinHeight = sticky && isGrow && !!image
-  const stickyMinHeight = needsStickyMinHeight ? 200 : undefined
+  // Sticky items interpret percent heights as percent of the VISIBLE scroll area, not of
+  // the column, since a pinned element is effectively viewport-anchored. Container query
+  // units do this without JS: `Ncqh` is N% of the nearest `container-type: size` ancestor,
+  // which is the content scroll container (see BuilderCanvas). max-height clamps to the
+  // column so a short passage does not get a sticky item taller than the column.
+  const percentMatch = typeof height === 'string' ? /^\s*(\d+(?:\.\d+)?)%\s*$/.exec(height) : null
+  const stickyViewportHeight = sticky && percentMatch ? `${percentMatch[1]}cqh` : undefined
 
   const style: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
     ...(bgColor ? { backgroundColor: bgColor } : {}),
-    // Height / flex sizing
+    // Height / flex sizing. Flow items: percent resolves against the SidebarColumn.
+    // Sticky items: percent is translated to cqh (percent of the visible scroll area).
     ...(isGrow
       ? { flex: '1 1 0%' }
-      : { flex: '0 0 auto', height }),
-    // Vertical alignment in parent via auto-margins (non-sticky only; sticky overrides margins)
-    ...(!sticky && verticalAlign === 'end' ? { marginTop: 'auto' } : {}),
-    ...(!sticky && verticalAlign === 'center' ? { marginTop: 'auto', marginBottom: 'auto' } : {}),
-    // Sticky positioning: explicit width so the element doesn't collapse to 0 width when stuck
+      : stickyViewportHeight
+        ? { flex: '0 0 auto', height: stickyViewportHeight, maxHeight: '100%' }
+        : { flex: '0 0 auto', height }),
+    // Vertical alignment: auto margins computed once per column (see sidebarLayout.ts)
+    ...alignHint,
     ...(sticky
       ? {
           position: 'sticky' as const,
@@ -82,18 +104,18 @@ export function SidebarContent({
             ? { top: '0px' }
             : {
                 bottom: '0px',
-                // Push to bottom of parent so the element's natural position is at the end;
-                // sticky bottom then keeps it pinned to the viewport bottom while scrolling.
+                // Natural position at the bottom of the overlay layer; sticky bottom then
+                // keeps it pinned to the scrollport bottom while scrolling.
                 marginTop: 'auto',
               }),
-          alignSelf: 'flex-start',
-          zIndex: 5,
           width: '100%',
-          minWidth: '100%',
           boxSizing: 'border-box',
-          ...(stickyMinHeight ? { minHeight: stickyMinHeight } : {}),
+          // The overlay layer has pointer-events: none so clicks reach flow items; re-enable
+          // on the sticky item itself so it can still be selected.
+          pointerEvents: 'auto',
         }
       : { position: 'relative' as const }),
+    ...styleOverride,
   }
 
   // Image layer always fills the container; only the container's height is set (e.g. 50%).
@@ -111,7 +133,13 @@ export function SidebarContent({
     : {}
 
   return (
-    <div className={className} style={style} onClick={onClick}>
+    <div
+      className={className}
+      style={style}
+      onClick={onClick}
+      data-sidebar-valign={verticalAlign}
+      data-sidebar-sticky={sticky ? stickyEdge : undefined}
+    >
       {image ? (
         <div style={imageLayerStyle} aria-hidden />
       ) : (
